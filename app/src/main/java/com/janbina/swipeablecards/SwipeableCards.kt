@@ -189,8 +189,10 @@ fun Modifier.swipeToBack(
 
                 if (targetOffsetY.absoluteValue <= size.height) {
                     // Not enough velocity; Reset.
-                    launch { offsetY.animateTo(targetValue = 0f, initialVelocity = velocity) }
-                    launch { rotation.animateTo(targetValue = 0f, initialVelocity = velocity) }
+                    coroutineScope {
+                        launch { offsetY.animateTo(targetValue = 0f, initialVelocity = velocity) }
+                        launch { rotation.animateTo(targetValue = 0f, initialVelocity = velocity) }
+                    }
                 } else {
                     // Enough velocity to fling the card to the back
                     val boomerangDuration = 600
@@ -207,28 +209,30 @@ fun Modifier.swipeToBack(
                     )
                     val rotationOvershoot = rotationToFling + 12f
 
-                    launch {
-                        rotation.animateTo(targetValue = if (leftSide) rotationToFling else -rotationToFling,
-                            initialVelocity = velocity,
-                            animationSpec = keyframes {
-                                durationMillis = boomerangDuration
-                                0f at 0 with EaseInOutEasing
-                                (if (leftSide) rotationOvershoot else -rotationOvershoot) at boomerangDuration - 50 with LinearOutSlowInEasing
-                                (if (leftSide) rotationToFling else -rotationToFling) at boomerangDuration
-                            })
-                        rotation.snapTo(0f)
+                    coroutineScope {
+                        launch {
+                            rotation.animateTo(targetValue = if (leftSide) rotationToFling else -rotationToFling,
+                                initialVelocity = velocity,
+                                animationSpec = keyframes {
+                                    durationMillis = boomerangDuration
+                                    0f at 0 with EaseInOutEasing
+                                    (if (leftSide) rotationOvershoot else -rotationOvershoot) at boomerangDuration - 50 with LinearOutSlowInEasing
+                                    (if (leftSide) rotationToFling else -rotationToFling) at boomerangDuration
+                                })
+                            rotation.snapTo(0f)
+                        }
+                        launch {
+                            offsetY.animateTo(targetValue = 0f,
+                                initialVelocity = velocity,
+                                animationSpec = keyframes {
+                                    durationMillis = boomerangDuration
+                                    -distanceToFling at (boomerangDuration / 2) with EaseInOutEasing
+                                    40f at boomerangDuration - 70
+                                })
+                        }
+                        delay(100)
+                        onSwipe()
                     }
-                    launch {
-                        offsetY.animateTo(targetValue = 0f,
-                            initialVelocity = velocity,
-                            animationSpec = keyframes {
-                                durationMillis = boomerangDuration
-                                -distanceToFling at (boomerangDuration / 2) with EaseInOutEasing
-                                40f at boomerangDuration - 70
-                            })
-                    }
-                    delay(100)
-                    onSwipe()
                 }
             }
         }

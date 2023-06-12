@@ -44,7 +44,7 @@ fun SwipeableCards() {
         Color(0xffef9a9a),
         Color(0xfffff59d),
     )
-    var order by remember { mutableStateOf(listOf(0, 1, 2, 3)) }
+    var colorsInOrder by remember { mutableStateOf(colors) }
 
     Box(
         Modifier
@@ -53,15 +53,16 @@ fun SwipeableCards() {
             .fillMaxSize(),
         contentAlignment = Alignment.BottomCenter
     ) {
-        colors.forEachIndexed { idx, color ->
+        colors.forEach { color ->
             SwipeableCard(
-                order = order[idx],
+                order = colorsInOrder.indexOf(color),
                 totalCount = colors.size,
                 backgroundColor = color,
                 onSwipe = {
-                    val newOrder = order.toMutableList()
-                    Collections.rotate(newOrder, 1)
-                    order = newOrder.toList()
+                    colorsInOrder = colorsInOrder.toMutableList().apply {
+                        remove(color)
+                        add(color)
+                    }
                 }
             )
         }
